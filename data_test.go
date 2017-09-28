@@ -53,7 +53,9 @@ func TestReadWriteJSON(t *testing.T) {
 		t.Errorf("Read/Write JSON failed\n"+
 			"Got  Name: %s, Year: %d, Fast: %t\n"+
 			"Want Name: %s, Year: %d, Fast: %t",
-			out.Name, out.Year, s.Name, s.Year)
+			out.Name, out.Year, out.Fast,
+			s.Name, s.Year, s.Fast,
+		)
 	}
 
 	os.Remove("temp.json")

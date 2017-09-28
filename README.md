@@ -1,7 +1,9 @@
-# beaver
+# beaver [![build status](https://api.travis-ci.org/Hunsin/beaver.svg?branch=master)](https://travis-ci.org/Hunsin/beaver) [![GoDoc](https://godoc.org/github.com/Hunsin/beaver?status.svg)](https://godoc.org/github.com/Hunsin/beaver)
 
 A set of libraries which may be useful in different projects.
+[Godoc](https://godoc.org/github.com/Hunsin/beaver)
 
+## Install
 `go get github.com/Hunsin/beaver`
 
 ## JSON
