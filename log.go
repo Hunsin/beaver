@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+// The levels define whether a Logger should generate logs in different level
 const (
 	Lfatal = 1 << iota
 	Lerror
@@ -14,6 +15,9 @@ const (
 	Ldebug
 )
 
+// Logger wraps two log.Loggers with different output deestination. One is standard
+// output when method Debug, Info or Warn is called; another is error output where
+// Error or Fatal writes data.
 type Logger struct {
 	o, e  *log.Logger
 	level int
@@ -68,18 +72,18 @@ func (l *Logger) Level(lv int) *Logger {
 	return l
 }
 
-// Output sets the destination of standard and error outputs of the Logger
-// The out must not be nil. The destination of error output will be set to
-// standard output if err is nil.
-func (l *Logger) Output(out, err io.Writer) *Logger {
+// Output sets the destination of standard and error outputs of the Logger.
+// The out must not be nil. The destination of error output will be same as
+// standard output if eout is nil.
+func (l *Logger) Output(out, eout io.Writer) *Logger {
 
 	if out == nil {
 		panic("A nil pointer can not be used as output")
 	}
 	l.o.SetOutput(out)
 
-	if err != nil {
-		l.e.SetOutput(err)
+	if eout != nil {
+		l.e.SetOutput(eout)
 		return l
 	}
 
@@ -145,9 +149,9 @@ func LogPrefix(p string) *Logger {
 	return defaultLogger.Prefix(p)
 }
 
-// NewLogger returns a new Logger with given format.
+// NewLogger returns a new Logger.
 // By default, it logs at all level and the output destination is same as default Logger.
-func NewLogger(format string) *Logger {
+func NewLogger() *Logger {
 	return &Logger{
 		level: Lfatal | Lerror | Lwarn | Linfo | Ldebug,
 		o:     defaultLogger.o,
