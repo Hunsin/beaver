@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -93,5 +94,37 @@ func TestServeJSON(t *testing.T) {
 	if string(out) != string(want) {
 		t.Errorf("ServeJSON failed\nwant: %s, out: %s",
 			string(want), string(out))
+	}
+}
+
+func TestGetJSON(t *testing.T) {
+	s := sample{
+		Name: "Beaver",
+		Year: 2017,
+		Fast: true,
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		acp := strings.Join(r.Header["Accept"], ",")
+		if acp != "text/html,application/json" {
+			t.Errorf("Accept header not set properly, got: %s", acp)
+		}
+
+		ServeJSON(w, http.StatusOK, &s)
+	}))
+	defer ts.Close()
+
+	out := sample{}
+	h := make(http.Header)
+	h.Set("Accept", "text/html")
+	GetJSON(ts.URL, h, &out)
+
+	if out.Name != s.Name || out.Year != s.Year || out.Fast != s.Fast {
+		t.Errorf("Read/Write JSON failed\n"+
+			"Got  Name: %s, Year: %d, Fast: %t\n"+
+			"Want Name: %s, Year: %d, Fast: %t",
+			out.Name, out.Year, out.Fast,
+			s.Name, s.Year, s.Fast,
+		)
 	}
 }

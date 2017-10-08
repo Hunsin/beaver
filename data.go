@@ -8,7 +8,6 @@ import (
 
 // WriteFile writes bytes in given pathname.
 // It overwrites the file if it already exists.
-// The caller should close the file if necessary.
 func WriteFile(path string, body []byte) error {
 	f, err := os.Create(path)
 	if err != nil {
@@ -62,4 +61,28 @@ func ServeJSON(w http.ResponseWriter, status int, body interface{}) error {
 	w.WriteHeader(status)
 	_, err = w.Write(js)
 	return err
+}
+
+// GetJSON downloads the JSON-encoded data from specific URL with given
+// header and stores in given object. If the header is nil, the default
+// request http.Header is applied. "application/json" is appended to
+// Accept header automatically.
+func GetJSON(url string, header http.Header, body interface{}) error {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	if header != nil {
+		req.Header = header
+	}
+	req.Header.Add("Accept", "application/json")
+
+	res, err := (&http.Client{}).Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	return json.NewDecoder(res.Body).Decode(body)
 }
