@@ -1,6 +1,7 @@
 package beaver
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -34,20 +35,52 @@ func TestWriteFile(t *testing.T) {
 	os.Remove("tempfile")
 }
 
-func TestReadWriteJSON(t *testing.T) {
+func TestGet(t *testing.T) {
 	s := sample{
 		Name: "Beaver",
 		Year: 2017,
 		Fast: true,
 	}
 
-	if err := WriteJSON("temp.json", &s); err != nil {
-		t.Errorf("WriteJSON exits with error: %s", err.Error())
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		acp := strings.Join(r.Header["Accept"], ",")
+		if acp != "text/html,application/json" {
+			t.Errorf("Accept header not set properly, got: %s", acp)
+		}
+
+		JSON(&s).Serve(w, http.StatusOK)
+	}))
+	defer ts.Close()
+
+	out := sample{}
+	h := make(http.Header)
+	h.Set("Accept", "text/html")
+	JSON(&out).Get(ts.URL, h)
+
+	if out.Name != s.Name || out.Year != s.Year || out.Fast != s.Fast {
+		t.Errorf("Read/Write JSON failed\n"+
+			"Got  Name: %s, Year: %d, Fast: %t\n"+
+			"Want Name: %s, Year: %d, Fast: %t",
+			out.Name, out.Year, out.Fast,
+			s.Name, s.Year, s.Fast,
+		)
+	}
+}
+
+func TestOpenWriteFile(t *testing.T) {
+	s := sample{
+		Name: "Beaver",
+		Year: 2017,
+		Fast: true,
+	}
+
+	if err := JSON(&s).WriteFile("temp.json"); err != nil {
+		t.Errorf("JSONPod.WriteFile exits with error: %s", err.Error())
 	}
 
 	out := sample{}
-	if err := OpenJSON("temp.json", &out); err != nil {
-		t.Errorf("OpenJSON exits with error: %s", err.Error())
+	if err := JSON(&out).Open("temp.json"); err != nil {
+		t.Errorf("JSONPod.Open exits with error: %s", err.Error())
 	}
 
 	if out.Name != s.Name || out.Year != s.Year || out.Fast != s.Fast {
@@ -62,7 +95,7 @@ func TestReadWriteJSON(t *testing.T) {
 	os.Remove("temp.json")
 }
 
-func TestServeJSON(t *testing.T) {
+func TestServe(t *testing.T) {
 	s := sample{
 		Name: "Beaver",
 		Year: 2017,
@@ -70,19 +103,19 @@ func TestServeJSON(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	if err := ServeJSON(w, http.StatusTeapot, &s); err != nil {
-		t.Errorf("ServeJSON exits with error: %s", err.Error())
+	if err := JSON(&s).Serve(w, http.StatusTeapot); err != nil {
+		t.Errorf("JSONPod.Serve exits with error: %s", err.Error())
 	}
 
 	res := w.Result()
 	defer res.Body.Close()
 	ct := res.Header.Get("Content-Type")
 	if ct != "application/json; charset=utf-8" {
-		t.Error("ServeJSON doesn't set Content-Type header")
+		t.Error("JSONPod.Serve doesn't set Content-Type header")
 	}
 
 	if res.StatusCode != http.StatusTeapot {
-		t.Error("ServeJSON doesn't set status code")
+		t.Error("JSONPod.Serve doesn't set status code")
 	}
 
 	out, err := ioutil.ReadAll(res.Body)
@@ -92,39 +125,26 @@ func TestServeJSON(t *testing.T) {
 
 	want, _ := json.Marshal(&s)
 	if string(out) != string(want) {
-		t.Errorf("ServeJSON failed\nwant: %s, out: %s",
+		t.Errorf("JSONPod.Serve failed\nwant: %s, out: %s",
 			string(want), string(out))
 	}
 }
 
-func TestGetJSON(t *testing.T) {
+func TestWrite(t *testing.T) {
 	s := sample{
 		Name: "Beaver",
 		Year: 2017,
 		Fast: true,
 	}
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		acp := strings.Join(r.Header["Accept"], ",")
-		if acp != "text/html,application/json" {
-			t.Errorf("Accept header not set properly, got: %s", acp)
-		}
+	var buf bytes.Buffer
+	if _, err := JSON(&s).Write(&buf); err != nil {
+		t.Errorf("JSONPod.Write exits with error: %s", err.Error())
+	}
 
-		ServeJSON(w, http.StatusOK, &s)
-	}))
-	defer ts.Close()
-
-	out := sample{}
-	h := make(http.Header)
-	h.Set("Accept", "text/html")
-	GetJSON(ts.URL, h, &out)
-
-	if out.Name != s.Name || out.Year != s.Year || out.Fast != s.Fast {
-		t.Errorf("Read/Write JSON failed\n"+
-			"Got  Name: %s, Year: %d, Fast: %t\n"+
-			"Want Name: %s, Year: %d, Fast: %t",
-			out.Name, out.Year, out.Fast,
-			s.Name, s.Year, s.Fast,
-		)
+	want, _ := json.Marshal(&s)
+	if buf.String() != string(want) {
+		t.Errorf("JSONPod.Write failed\nGot:  %s\n Want: %s",
+			buf.String(), string(want))
 	}
 }
