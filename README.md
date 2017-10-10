@@ -11,11 +11,18 @@ Example of reading/writing JSON file
 ```go
 package main
 
-import "github.com/Hunsin/beaver"
+import (
+  "net/http"
+  "github.com/Hunsin/beaver"
+)
 
 type example struct {
   Hello string `json:"hello"`
   Year  string `json:"year"`
+}
+
+type ip struct {
+  IP string `json:ip`
 }
 
 func main() {
@@ -24,21 +31,34 @@ func main() {
     Year:  2017,
   }
 
-  // example of writing JSON file
-  err := beaver.WriteJSON("path/to/file.json", &e)
-  if err != nil {
-    println(err.Error())
-  }
+  // example of writing JSON file; ignore error
+  beaver.JSON(&e).WriteFile("path/to/file.json")
 
-  // example of reading JSON file
+  // example of reading JSON file; ignore error
   out := example{}
-  err = beaver.OpenJSON("path/to/file.json", &out)
-  if err != nil {
-    println(err.Error())
-  }
+  js  := beaver.JSON(&out)
+  js.Open("path/to/file.json")
 
   // now you have the values
-  println(out.Hello)
-  println(out.Year)
+  println(out.Hello) // Hello World!
+  println(out.Year)  // 2017
+
+  // example of serving JSON data; ignore error
+  http.HandleFunc("/path", func(w http.ResponseWriter, r *http.Request) {
+    js.Serve(w, http.StatusOK)
+  })
+
+  // example of get values from other service; ignore error
+  addr := ip{}
+  cli  := beaver.JSON(&addr)
+  cli.Get("http://ip.jsontest.com")
+  println(addr.IP) 
+
+  // example of send data to another service
+  // the second parameter is your custom http.Header
+  err := cli.Post("https://url.of.service", nil)
+  if err != nil {
+    println(err.Error)
+  }
 }
 ```
