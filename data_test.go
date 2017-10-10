@@ -17,6 +17,54 @@ type sample struct {
 	Fast bool   `json:"fast"`
 }
 
+func testRequest(t *testing.T, method string, h http.Header, v interface{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		
+		// check method
+		if r.Method != method {
+			t.Errorf("Request method not match, got: %s, want: %s", r.Method, method)
+		}
+
+		want, err := json.Marshal(v)
+		if err != nil {
+			t.Errorf("Can not marshal v: %s", err.Error())
+		}
+
+		// json.Encoder.Encode appends a newline charater
+		want = append(want, []byte("\n")...)
+
+		if h == nil {
+			h = make(http.Header)
+		}
+
+		// GET:          Accept: "application/json"; write body
+		// Others: Content-Tyep: "application/json"; check body
+		if r.Method == "GET" {
+			h.Add("Accept", "application/json")
+			w.Write(want)
+		} else {
+			h.Set("Content-Type", "application/json; charset=utf-8")
+			
+			got, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				t.Errorf("Can not read request body: %s", err.Error())
+			}
+			if string(got) != string(want) {
+				t.Errorf("Request Body not match.\nGot:  %s\nWant: %s", string(got), string(want))
+			}
+		}
+			
+		// check header
+		for key := range h {
+			got  := strings.Join(h[key], ",")
+			want := strings.Join(r.Header[key], ",")
+			if got != want {
+				t.Errorf("%s header not set properly.\nGot:  %s\nWant: %s", key, got, want)
+			}
+		}
+	}
+}
+
 func TestWriteFile(t *testing.T) {
 	str := "Wellcome! Enjoy your development!"
 	if err := WriteFile("tempfile", []byte(str)); err != nil {
@@ -41,19 +89,15 @@ func TestGet(t *testing.T) {
 		Year: 2017,
 		Fast: true,
 	}
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		acp := strings.Join(r.Header["Accept"], ",")
-		if acp != "text/html,application/json" {
-			t.Errorf("Accept header not set properly, got: %s", acp)
-		}
-
-		JSON(&s).Serve(w, http.StatusOK)
-	}))
+	
+	hwant := make(http.Header)
+	hwant.Set("Accept", "text/html")
+	
+	ts := httptest.NewServer(testRequest(t, "GET", hwant, &s))
 	defer ts.Close()
-
-	out := sample{}
+	
 	h := make(http.Header)
+	out := sample{}
 	h.Set("Accept", "text/html")
 	JSON(&out).Get(ts.URL, h)
 
@@ -93,6 +137,51 @@ func TestOpenWriteFile(t *testing.T) {
 	}
 
 	os.Remove("temp.json")
+}
+
+func TestSend(t *testing.T) {
+	s := sample{
+		Name: "Beaver",
+		Year: 2017,
+		Fast: true,
+	}
+
+	hwant := make(http.Header)
+	hwant.Add("Cache-Control", "no-cache")
+	ts := httptest.NewServer(testRequest(t, "POST", hwant, &s))
+	defer ts.Close()
+
+	// Content-Type header will be rewrited
+	h := make(http.Header)
+	h.Set("Content-Type", "unintended value")
+	h.Add("Cache-Control", "no-cache")
+	JSON(&s).Send("POST", ts.URL, h)
+}
+
+func TestPost(t *testing.T) {
+	s := sample{
+		Name: "Beaver",
+		Year: 2017,
+		Fast: true,
+	}
+
+	ts := httptest.NewServer(testRequest(t, "POST", make(http.Header), &s))
+	defer ts.Close()
+
+	JSON(&s).Post(ts.URL, nil)
+}
+
+func TestPut(t *testing.T) {
+	s := sample{
+		Name: "Beaver",
+		Year: 2017,
+		Fast: true,
+	}
+
+	ts := httptest.NewServer(testRequest(t, "PUT", make(http.Header), &s))
+	defer ts.Close()
+
+	JSON(&s).Put(ts.URL, nil)
 }
 
 func TestServe(t *testing.T) {
