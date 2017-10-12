@@ -154,7 +154,7 @@ func LogPrefix(p string) *Logger {
 func NewLogger() *Logger {
 	return &Logger{
 		level: Lfatal | Lerror | Lwarn | Linfo | Ldebug,
-		o:     defaultLogger.o,
-		e:     defaultLogger.e,
+		o:     log.New(os.Stdout, "", log.LstdFlags),
+		e:     log.New(os.Stderr, "", log.LstdFlags),
 	}
 }

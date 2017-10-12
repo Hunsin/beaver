@@ -2,6 +2,9 @@ package beaver
 
 import (
 	"bytes"
+	"io/ioutil"
+	"os"
+	"os/exec"
 	"regexp"
 	"testing"
 )
@@ -75,6 +78,62 @@ func TestLevelNone(t *testing.T) {
 	}
 	if ow.Len() != 0 {
 		t.Errorf("Level 0 new Logger failed. Output: %s", ow.String())
+	}
+}
+
+func TestFatal(t *testing.T) {
+	fn := "temp_log"
+	f, err := os.Create(fn)
+	if err != nil {
+		t.Errorf("Can not create tempfile: %s", err.Error())
+	}
+	defer os.Remove(fn)
+	defer f.Close()
+
+	switch os.Getenv("BEAVER_FATAL") {
+	case "default":
+		
+		// the destination of standard and error output are same
+		LogOutput(f, nil)
+		LogLevel(Lfatal)
+		Fatal(message)
+	case "new":
+		l := NewLogger().Level(Lfatal).Output(f, nil)
+		l.Fatal(message)
+	default:
+
+		// test default Logger
+		cmd := exec.Command(os.Args[0], "-test.run=TestFatal")
+		cmd.Env = append(os.Environ(), "BEAVER_FATAL=default")
+		err := cmd.Run()
+		if e, ok := err.(*exec.ExitError); !ok || e.Success() {
+			t.Errorf("TestFatal subprocess default Logger failed: %s", err.Error())
+		}
+
+		buf, err := ioutil.ReadFile(fn)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if !reg.Match(buf) {
+			t.Errorf("Standard Logger.Fatal output not match. Got: %s", buf)
+		}
+		t.Log(string(buf))
+
+		// test new Logger
+		cmd = exec.Command(os.Args[0], "-test.run=TestFatal")
+		cmd.Env = append(os.Environ(), "BEAVER_FATAL=new")
+		err = cmd.Run()
+		if e, ok := err.(*exec.ExitError); !ok || e.Success() {
+			t.Errorf("TestFatal subprocess new Logger failed: %s", err.Error())
+		}
+
+		buf, err = ioutil.ReadFile(fn)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if !reg.Match(buf) {
+			t.Errorf("New Logger.Fatal output not match. Got: %s", buf)
+		}
 	}
 }
 
