@@ -24,7 +24,8 @@ func WriteFile(path string, body []byte) error {
 	return f.Sync()
 }
 
-// A JSONPod represents
+// A JSONPod is embedded with a pointer to interface. It is used to deal
+// with JSON-encoding data.
 type JSONPod struct {
 	v interface{}
 }
