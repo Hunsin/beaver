@@ -3,6 +3,7 @@ package beaver
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -22,6 +23,39 @@ func WriteFile(path string, body []byte) error {
 	}
 
 	return f.Sync()
+}
+
+// Download gets the file from a HTTP server with given url and HTTP header,
+// saving it in given path. The file will be truncated if it already exists.
+// A non-2xx status code from server will cause an error and the file won't
+// be created. If h is nil, a default http.Header is applied.
+func Download(h http.Header, url, path string) (int64, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	if h != nil {
+		req.Header = h
+	}
+
+	res, err := (&http.Client{}).Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode >= 300 {
+		return 0, errors.New("Server response with status: " + res.Status)
+	}
+
+	f, err := os.Create(path)
+	if err != nil {
+		return 0, err
+	}
+	defer f.Close()
+
+	return io.Copy(f, res.Body)
 }
 
 // A JSONPod is embedded with a pointer to interface. It is used to deal
