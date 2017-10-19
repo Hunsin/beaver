@@ -143,18 +143,12 @@ func (j *JSONPod) Serve(w http.ResponseWriter, code int) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
 
-	_, err := j.Write(w)
-	return err
+	return j.Write(w)
 }
 
 // Write marshals j.v and writes the result to w.
-func (j *JSONPod) Write(w io.Writer) (int, error) {
-	js, err := json.Marshal(j.v)
-	if err != nil {
-		return 0, err
-	}
-
-	return w.Write(js)
+func (j *JSONPod) Write(w io.Writer) error {
+	return json.NewEncoder(w).Encode(j.v)
 }
 
 // WriteFile writes JSON-encoded data of j.v to a file by given path.

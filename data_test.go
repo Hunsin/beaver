@@ -17,9 +17,13 @@ type sample struct {
 	Fast bool   `json:"fast"`
 }
 
+func trimNewline(b []byte) string {
+	return strings.TrimSuffix(string(b), "\n")
+}
+
 func testRequest(t *testing.T, method string, h http.Header, v interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		
+
 		// check method
 		if r.Method != method {
 			t.Errorf("Request method not match, got: %s, want: %s", r.Method, method)
@@ -44,7 +48,7 @@ func testRequest(t *testing.T, method string, h http.Header, v interface{}) http
 			w.Write(want)
 		} else {
 			h.Set("Content-Type", "application/json; charset=utf-8")
-			
+
 			got, err := ioutil.ReadAll(r.Body)
 			if err != nil {
 				t.Errorf("Can not read request body: %s", err.Error())
@@ -53,10 +57,10 @@ func testRequest(t *testing.T, method string, h http.Header, v interface{}) http
 				t.Errorf("Request Body not match.\nGot:  %s\nWant: %s", string(got), string(want))
 			}
 		}
-			
+
 		// check header
 		for key := range h {
-			got  := strings.Join(h[key], ",")
+			got := strings.Join(h[key], ",")
 			want := strings.Join(r.Header[key], ",")
 			if got != want {
 				t.Errorf("%s header not set properly.\nGot:  %s\nWant: %s", key, got, want)
@@ -89,13 +93,13 @@ func TestGet(t *testing.T) {
 		Year: 2017,
 		Fast: true,
 	}
-	
+
 	hwant := make(http.Header)
 	hwant.Set("Accept", "text/html")
-	
+
 	ts := httptest.NewServer(testRequest(t, "GET", hwant, &s))
 	defer ts.Close()
-	
+
 	h := make(http.Header)
 	out := sample{}
 	h.Set("Accept", "text/html")
@@ -213,8 +217,9 @@ func TestServe(t *testing.T) {
 	}
 
 	want, _ := json.Marshal(&s)
-	if string(out) != string(want) {
-		t.Errorf("JSONPod.Serve failed\nwant: %s, out: %s",
+
+	if trimNewline(want) != trimNewline(out) {
+		t.Errorf("JSONPod.Serve failed\nWant: %s\nGot:  %s",
 			string(want), string(out))
 	}
 }
@@ -227,12 +232,12 @@ func TestWrite(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	if _, err := JSON(&s).Write(&buf); err != nil {
+	if err := JSON(&s).Write(&buf); err != nil {
 		t.Errorf("JSONPod.Write exits with error: %s", err.Error())
 	}
 
 	want, _ := json.Marshal(&s)
-	if buf.String() != string(want) {
+	if trimNewline(buf.Bytes()) != trimNewline(want) {
 		t.Errorf("JSONPod.Write failed\nGot:  %s\n Want: %s",
 			buf.String(), string(want))
 	}
