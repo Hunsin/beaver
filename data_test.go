@@ -11,6 +11,8 @@ import (
 	"testing"
 )
 
+const str = "Wellcome! Enjoy your development."
+
 type sample struct {
 	Name string `json:"name"`
 	Year int    `json:"year"`
@@ -70,10 +72,10 @@ func testRequest(t *testing.T, method string, h http.Header, v interface{}) http
 }
 
 func TestWriteFile(t *testing.T) {
-	str := "Wellcome! Enjoy your development!"
 	if err := WriteFile("tempfile", []byte(str)); err != nil {
 		t.Errorf("WriteFile exits with error: %s", err.Error())
 	}
+	defer os.Remove("tempfile")
 
 	f, err := ioutil.ReadFile("tempfile")
 	if err != nil {
@@ -83,8 +85,29 @@ func TestWriteFile(t *testing.T) {
 	if string(f) != str {
 		t.Errorf("WriteFile failed\nGot:  %s\nWant: %s", string(f), str)
 	}
+}
 
-	os.Remove("tempfile")
+func TestDownload(t *testing.T) {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(str))
+	})
+	ts := httptest.NewServer(h)
+
+	_, err := Download(nil, ts.URL, "tempfile")
+	if err != nil {
+		t.Errorf("Download failed with error: %s", err.Error())
+	}
+	defer os.Remove("tempfile")
+
+	out, err := ioutil.ReadFile("tempfile")
+	if err != nil {
+		t.Errorf("Can not open tempfile: %s", err.Error())
+	}
+
+	if string(out) != str {
+		t.Errorf("Download failed\nGot:  %s\nWant: %s", string(out), str)
+	}
 }
 
 func TestGet(t *testing.T) {
