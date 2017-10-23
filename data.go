@@ -1,7 +1,6 @@
 package beaver
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
@@ -119,10 +118,13 @@ func (j *JSONPod) Put(url string, h http.Header) (*http.Response, error) {
 // The request's body is JSON-encoded data of j.v. A http.Response is returned.
 // It is the caller's responsibility to close the response's Body.
 func (j *JSONPod) Send(method, url string, h http.Header) (*http.Response, error) {
-	var body bytes.Buffer
-	err := json.NewEncoder(&body).Encode(j.v)
+	r, w := io.Pipe()
+	go func() {
+		json.NewEncoder(w).Encode(j.v)
+		w.Close()
+	}()
 
-	req, err := http.NewRequest(method, url, &body)
+	req, err := http.NewRequest(method, url, r)
 	if err != nil {
 		return nil, err
 	}
