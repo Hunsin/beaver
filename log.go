@@ -26,7 +26,7 @@ type Logger struct {
 // Fatal calls os.Exit(1) after writes given message to error output
 func (l *Logger) Fatal(msg string) {
 	if l.level&Lfatal != 0 {
-		l.e.Output(2, msg)
+		l.e.Output(3, msg)
 	}
 	os.Exit(1)
 }
@@ -34,28 +34,28 @@ func (l *Logger) Fatal(msg string) {
 // Error writes given message to error output
 func (l *Logger) Error(msg string) {
 	if l.level&Lerror != 0 {
-		l.e.Output(2, msg)
+		l.e.Output(3, msg)
 	}
 }
 
 // Warn writes given message to standard output
 func (l *Logger) Warn(msg string) {
 	if l.level&Lwarn != 0 {
-		l.o.Output(2, msg)
+		l.o.Output(3, msg)
 	}
 }
 
 // Info writes given message to standard output
 func (l *Logger) Info(msg string) {
 	if l.level&Linfo != 0 {
-		l.o.Output(2, msg)
+		l.o.Output(3, msg)
 	}
 }
 
 // Debug writes given message to standard output
 func (l *Logger) Debug(msg string) {
 	if l.level&Ldebug != 0 {
-		l.o.Output(2, msg)
+		l.o.Output(3, msg)
 	}
 }
 
