@@ -18,11 +18,8 @@ func WriteFile(path string, body []byte) error {
 	}
 	defer f.Close()
 
-	if _, err = f.Write(body); err != nil {
-		return err
-	}
-
-	return f.Sync()
+	_, err = f.Write(body)
+	return err
 }
 
 // Download gets the file from a HTTP server with given url and HTTP header,
