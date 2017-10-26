@@ -104,6 +104,11 @@ func (j *JSONPod) Open(path string) error {
 	return json.NewDecoder(f).Decode(j.v)
 }
 
+// Parse takes []byte b and decode to j.v
+func (j *JSONPod) Parse(b []byte) error {
+	return json.Unmarshal(b, j.v)
+}
+
 // Post is a shorthand for *JSONPod.Send("POST", url, h)
 func (j *JSONPod) Post(url string, h http.Header) (*http.Response, error) {
 	return j.Send("POST", url, h)

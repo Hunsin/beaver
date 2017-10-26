@@ -165,6 +165,34 @@ func TestOpenWriteFile(t *testing.T) {
 	}
 }
 
+func TestParse(t *testing.T) {
+	s := sample{
+		Name: "Beaver",
+		Year: 2017,
+		Fast: true,
+	}
+
+	b, err := json.Marshal(&s)
+	if err != nil {
+		t.Errorf("Marshal struct exits with error: %s", err.Error())
+	}
+
+	out := sample{}
+	err = JSON(&out).Parse(b)
+	if err != nil {
+		t.Errorf("JSONPod.Parse exits with error: %s", err.Error())
+	}
+
+	if out.Name != s.Name || out.Year != s.Year || out.Fast != s.Fast {
+		t.Errorf("Read/Write JSON failed\n"+
+			"Got  Name: %s, Year: %d, Fast: %t\n"+
+			"Want Name: %s, Year: %d, Fast: %t",
+			out.Name, out.Year, out.Fast,
+			s.Name, s.Year, s.Fast,
+		)
+	}
+}
+
 func TestSend(t *testing.T) {
 	s := sample{
 		Name: "Beaver",
