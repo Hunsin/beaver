@@ -26,10 +26,10 @@ func TestOutput(t *testing.T) {
 	Error(message)
 
 	if !reg.Match(ow.Bytes()) {
-		t.Errorf("Standard output error at default Logger\nGot: %s", ow.String())
+		t.Errorf("Standard output error at default Logger\nGot: %v", ow)
 	}
 	if !reg.Match(ew.Bytes()) {
-		t.Errorf("Error output error at default Logger\nGot: %s", ow.String())
+		t.Errorf("Error output error at default Logger\nGot: %v", ow)
 	}
 
 	ow.Reset()
@@ -41,10 +41,10 @@ func TestOutput(t *testing.T) {
 	l.Error(message)
 
 	if !reg.Match(ow.Bytes()) {
-		t.Errorf("Standard output error, got: %s", ow.String())
+		t.Errorf("Standard output error, got: %v", ow)
 	}
 	if !reg.Match(ew.Bytes()) {
-		t.Errorf("Error output error, got: %s", ow.String())
+		t.Errorf("Error output error, got: %v", ow)
 	}
 }
 
@@ -60,10 +60,10 @@ func TestLevelNone(t *testing.T) {
 	Info(message)
 	Debug(message)
 	if ew.Len() != 0 {
-		t.Errorf("Level 0 default Logger.Error failed. Error output: %s", ew.String())
+		t.Errorf("Level 0 default Logger.Error failed. Error output: %v", ew)
 	}
 	if ow.Len() != 0 {
-		t.Errorf("Level 0 default Logger failed. Output: %s", ow.String())
+		t.Errorf("Level 0 default Logger failed. Output: %v", ow)
 	}
 
 	// test new Logger
@@ -74,10 +74,10 @@ func TestLevelNone(t *testing.T) {
 	l.Info(message)
 	l.Debug(message)
 	if ew.Len() != 0 {
-		t.Errorf("Level 0 new Logger.Error failed. Error output: %s", ew.String())
+		t.Errorf("Level 0 new Logger.Error failed. Error output: %v", ew)
 	}
 	if ow.Len() != 0 {
-		t.Errorf("Level 0 new Logger failed. Output: %s", ow.String())
+		t.Errorf("Level 0 new Logger failed. Output: %v", ow)
 	}
 }
 
@@ -85,14 +85,14 @@ func TestFatal(t *testing.T) {
 	fn := "temp_log"
 	f, err := os.Create(fn)
 	if err != nil {
-		t.Errorf("Can not create tempfile: %s", err.Error())
+		t.Errorf("Can not create tempfile: %v", err)
 	}
 	defer os.Remove(fn)
 	defer f.Close()
 
 	switch os.Getenv("BEAVER_FATAL") {
 	case "default":
-		
+
 		// the destination of standard and error output are same
 		LogOutput(f, nil)
 		LogLevel(Lfatal)
@@ -107,7 +107,7 @@ func TestFatal(t *testing.T) {
 		cmd.Env = append(os.Environ(), "BEAVER_FATAL=default")
 		err := cmd.Run()
 		if e, ok := err.(*exec.ExitError); !ok || e.Success() {
-			t.Errorf("TestFatal subprocess default Logger failed: %s", err.Error())
+			t.Errorf("TestFatal subprocess default Logger failed: %v", err)
 		}
 
 		buf, err := ioutil.ReadFile(fn)
@@ -124,7 +124,7 @@ func TestFatal(t *testing.T) {
 		cmd.Env = append(os.Environ(), "BEAVER_FATAL=new")
 		err = cmd.Run()
 		if e, ok := err.(*exec.ExitError); !ok || e.Success() {
-			t.Errorf("TestFatal subprocess new Logger failed: %s", err.Error())
+			t.Errorf("TestFatal subprocess new Logger failed: %v", err)
 		}
 
 		buf, err = ioutil.ReadFile(fn)
@@ -147,10 +147,10 @@ func TestError(t *testing.T) {
 	Error(message)
 
 	if !reg.Match(ew.Bytes()) {
-		t.Errorf("Default Logger.Error failed. Got: %s", ew.String())
+		t.Errorf("Default Logger.Error failed. Got: %v", ew)
 	}
 	if ow.Len() != 0 {
-		t.Errorf("Default Logger.Error writes to standard output.\nGot: %s", ow.String())
+		t.Errorf("Default Logger.Error writes to standard output.\nGot: %v", ow)
 	}
 
 	ow.Reset()
@@ -161,10 +161,10 @@ func TestError(t *testing.T) {
 	l.Error(message)
 
 	if !reg.Match(ew.Bytes()) {
-		t.Errorf("New Logger.Error failed. Got: %s", ew.String())
+		t.Errorf("New Logger.Error failed. Got: %v", ew)
 	}
 	if ow.Len() != 0 {
-		t.Errorf("New Logger.Error writes to standard output.\nGot: %s", ow.String())
+		t.Errorf("New Logger.Error writes to standard output.\nGot: %v", ow)
 	}
 }
 
@@ -178,10 +178,10 @@ func TestWarn(t *testing.T) {
 	Warn(message)
 
 	if !reg.Match(ow.Bytes()) {
-		t.Errorf("Default Logger.Warn failed. Got: %s", ow.String())
+		t.Errorf("Default Logger.Warn failed. Got: %v", ow)
 	}
 	if ew.Len() != 0 {
-		t.Errorf("Default Logger.Warn writes to error output.\nGot: %s", ew.String())
+		t.Errorf("Default Logger.Warn writes to error output.\nGot: %v", ew)
 	}
 
 	ow.Reset()
@@ -192,10 +192,10 @@ func TestWarn(t *testing.T) {
 	l.Warn(message)
 
 	if !reg.Match(ow.Bytes()) {
-		t.Errorf("New Logger.Warn failed. Got: %s", ow.String())
+		t.Errorf("New Logger.Warn failed. Got: %v", ow)
 	}
 	if ew.Len() != 0 {
-		t.Errorf("New Logger.Warn writes to error output.\nGot: %s", ew.String())
+		t.Errorf("New Logger.Warn writes to error output.\nGot: %v", ew)
 	}
 }
 
@@ -209,10 +209,10 @@ func TestInfo(t *testing.T) {
 	Info(message)
 
 	if !reg.Match(ow.Bytes()) {
-		t.Errorf("Default Logger.Info failed. Got: %s", ow.String())
+		t.Errorf("Default Logger.Info failed. Got: %v", ow)
 	}
 	if ew.Len() != 0 {
-		t.Errorf("Default Logger.Info writes to error output.\nGot: %s", ew.String())
+		t.Errorf("Default Logger.Info writes to error output.\nGot: %v", ew)
 	}
 
 	ow.Reset()
@@ -223,10 +223,10 @@ func TestInfo(t *testing.T) {
 	l.Info(message)
 
 	if !reg.Match(ow.Bytes()) {
-		t.Errorf("New Logger.Info failed. Got: %s", ow.String())
+		t.Errorf("New Logger.Info failed. Got: %v", ow)
 	}
 	if ew.Len() != 0 {
-		t.Errorf("New Logger.Info writes to error output.\nGot: %s", ew.String())
+		t.Errorf("New Logger.Info writes to error output.\nGot: %v", ew)
 	}
 }
 
@@ -240,10 +240,10 @@ func TestDebug(t *testing.T) {
 	Debug(message)
 
 	if !reg.Match(ow.Bytes()) {
-		t.Errorf("Default Logger.Error failed. Got: %s", ow.String())
+		t.Errorf("Default Logger.Error failed. Got: %v", ow)
 	}
 	if ew.Len() != 0 {
-		t.Errorf("Default Logger.Error writes to error output.\nGot: %s", ew.String())
+		t.Errorf("Default Logger.Error writes to error output.\nGot: %v", ew)
 	}
 
 	ow.Reset()
@@ -254,9 +254,9 @@ func TestDebug(t *testing.T) {
 	l.Debug(message)
 
 	if !reg.Match(ow.Bytes()) {
-		t.Errorf("New Logger.Error failed. Got: %s", ow.String())
+		t.Errorf("New Logger.Error failed. Got: %v", ow)
 	}
 	if ew.Len() != 0 {
-		t.Errorf("New Logger.Error writes to error output.\nGot: %s", ew.String())
+		t.Errorf("New Logger.Error writes to error output.\nGot: %v", ew)
 	}
 }
