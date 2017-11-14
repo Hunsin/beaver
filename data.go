@@ -8,17 +8,16 @@ import (
 	"os"
 )
 
-// WriteFile writes bytes in given pathname.
+// WriteFile copies src to the file in given pathname.
 // It overwrites the file if it already exists.
-func WriteFile(path string, body []byte) error {
+func WriteFile(path string, src io.Reader) (int64, error) {
 	f, err := os.Create(path)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer f.Close()
 
-	_, err = f.Write(body)
-	return err
+	return io.Copy(f, src)
 }
 
 // Download gets the file from a HTTP server with given url and HTTP header,
@@ -45,13 +44,7 @@ func Download(h http.Header, url, path string) (int64, error) {
 		return 0, errors.New("Server response with status: " + res.Status)
 	}
 
-	f, err := os.Create(path)
-	if err != nil {
-		return 0, err
-	}
-	defer f.Close()
-
-	return io.Copy(f, res.Body)
+	return WriteFile(path, res.Body)
 }
 
 // A JSONPod is embedded with a pointer to interface. It is used to deal
@@ -162,10 +155,14 @@ func (j *JSONPod) WriteFile(path string) error {
 		path += ".json"
 	}
 
-	b, err := json.MarshalIndent(j.v, "", "\t")
-	if err != nil {
-		return err
-	}
+	r, w := io.Pipe()
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "\t")
+	go func() {
+		enc.Encode(j.v)
+		w.Close()
+	}()
 
-	return WriteFile(path, b)
+	_, err := WriteFile(path, r)
+	return err
 }

@@ -72,10 +72,10 @@ func testRequest(t *testing.T, method string, h http.Header, v interface{}) http
 }
 
 func TestWriteFile(t *testing.T) {
-	if err := WriteFile("tempfile", []byte(str)); err != nil {
+	buf := bytes.NewBuffer([]byte(str))
+	if _, err := WriteFile("tempfile", buf); err != nil {
 		t.Errorf("WriteFile exits with error: %s", err.Error())
 	}
-	defer os.Remove("tempfile")
 
 	f, err := ioutil.ReadFile("tempfile")
 	if err != nil {
