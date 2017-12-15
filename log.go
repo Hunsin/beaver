@@ -1,6 +1,7 @@
 package beaver
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -24,38 +25,38 @@ type Logger struct {
 }
 
 // Fatal calls os.Exit(1) after writes given message to error output
-func (l *Logger) Fatal(msg string) {
+func (l *Logger) Fatal(msg interface{}) {
 	if l.level&Lfatal != 0 {
-		l.e.Output(3, msg)
+		l.e.Output(3, fmt.Sprint(msg))
 	}
 	os.Exit(1)
 }
 
 // Error writes given message to error output
-func (l *Logger) Error(msg string) {
+func (l *Logger) Error(msg interface{}) {
 	if l.level&Lerror != 0 {
-		l.e.Output(3, msg)
+		l.e.Output(3, fmt.Sprint(msg))
 	}
 }
 
 // Warn writes given message to standard output
-func (l *Logger) Warn(msg string) {
+func (l *Logger) Warn(msg interface{}) {
 	if l.level&Lwarn != 0 {
-		l.o.Output(3, msg)
+		l.o.Output(3, fmt.Sprint(msg))
 	}
 }
 
 // Info writes given message to standard output
-func (l *Logger) Info(msg string) {
+func (l *Logger) Info(msg interface{}) {
 	if l.level&Linfo != 0 {
-		l.o.Output(3, msg)
+		l.o.Output(3, fmt.Sprint(msg))
 	}
 }
 
 // Debug writes given message to standard output
-func (l *Logger) Debug(msg string) {
+func (l *Logger) Debug(msg interface{}) {
 	if l.level&Ldebug != 0 {
-		l.o.Output(3, msg)
+		l.o.Output(3, fmt.Sprint(msg))
 	}
 }
 
@@ -105,27 +106,27 @@ var defaultLogger = &Logger{
 }
 
 // Fatal calls default Logger.Fatal
-func Fatal(msg string) {
+func Fatal(msg interface{}) {
 	defaultLogger.Fatal(msg)
 }
 
 // Error calls default Logger.Error
-func Error(msg string) {
+func Error(msg interface{}) {
 	defaultLogger.Error(msg)
 }
 
 // Warn calls default Logger.Warn
-func Warn(msg string) {
+func Warn(msg interface{}) {
 	defaultLogger.Warn(msg)
 }
 
 // Info calls default Logger.Info
-func Info(msg string) {
+func Info(msg interface{}) {
 	defaultLogger.Info(msg)
 }
 
 // Debug calls default Logger.Debug
-func Debug(msg string) {
+func Debug(msg interface{}) {
 	defaultLogger.Debug(msg)
 }
 
