@@ -11,10 +11,11 @@ import (
 
 const (
 	regDateTime = "[0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9] "
+	regTag      = "[A-Z ]{5}: "
 	message     = "Logging message"
 )
 
-var reg, _ = regexp.Compile("^" + regDateTime + message + "\n$")
+var reg, _ = regexp.Compile("^" + regDateTime + regTag + message + "\n$")
 
 func TestOutput(t *testing.T) {
 	ow := new(bytes.Buffer)
@@ -258,5 +259,39 @@ func TestDebug(t *testing.T) {
 	}
 	if ew.Len() != 0 {
 		t.Errorf("New Logger.Error writes to error output.\nGot: %v", ew)
+	}
+}
+
+func TestTags(t *testing.T) {
+	w := new(bytes.Buffer)
+	r, _ := regexp.Compile("^" + regDateTime + message + "\n$")
+
+	// test empty tag
+	LogOutput(w, nil)
+	LogLevel(Lall)
+	LogTags(LTag{})
+	defer LogTags(DefaultLogTag)
+
+	Error(message)
+	if !r.Match(w.Bytes()) {
+		t.Errorf("Default Logger.Tags failed. Got: %v", w)
+	}
+
+	w.Reset()
+
+	// test custom tag
+	tag := LTag{
+		Fatal: "[fatal]",
+		Error: "[error]",
+		Warn:  "[warn ]",
+		Info:  "[info ]",
+		Debug: "[debug]",
+	}
+	r, _ = regexp.Compile("^" + regDateTime + `\[[a-z ]{5}\]` + message + "\n$")
+	l := NewLogger().Output(w, nil).Level(Lwarn).Tags(tag)
+
+	l.Warn(message)
+	if !r.Match(w.Bytes()) {
+		t.Errorf("Default Logger.Tags failed. Got: %v", w)
 	}
 }
