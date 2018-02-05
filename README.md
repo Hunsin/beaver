@@ -1,19 +1,19 @@
 # beaver [![build status](https://api.travis-ci.org/Hunsin/beaver.svg?branch=master)](https://travis-ci.org/Hunsin/beaver) [![GoDoc](https://godoc.org/github.com/Hunsin/beaver?status.svg)](https://godoc.org/github.com/Hunsin/beaver)
 
-A set of libraries which may be useful in different projects.
-[Godoc](https://godoc.org/github.com/Hunsin/beaver)
+A set of functions which may be useful when dealing with JSON or logger.  
+For more information please visit [Godoc](https://godoc.org/github.com/Hunsin/beaver).
 
 ## Install
 `go get github.com/Hunsin/beaver`
 
 ## JSON
-Example of reading/writing JSON file and GET/POST JSON from http services
+Example of reading/writing JSON file and GET/POST JSON from http services.
 ```go
 package main
 
 import (
   "net/http"
-  "github.com/Hunsin/beaver"
+  bv "github.com/Hunsin/beaver"
 )
 
 type example struct {
@@ -29,11 +29,11 @@ func main() {
   }
 
   // writing JSON file; ignore error
-  beaver.JSON(&e).WriteFile("example.json")
+  bv.JSON(&e).WriteFile("example.json")
 
   // reading JSON file; ignore error
   out := example{}
-  js  := beaver.JSON(&out)
+  js  := bv.JSON(&out)
   js.Open("example.json")
 
   // now you have the values
@@ -56,5 +56,39 @@ func main() {
   if err != nil {
     println(err.Error)
   }
+}
+```
+
+## Logger
+Logger wraps log.Logger with additional option to set log levels.
+Let's see the example:
+```go
+package main
+
+import (
+  "log"
+  "os"
+  bv "github.com/Hunsin/beaver"
+)
+
+func main() {
+  f, _ := os.Create("file_name.log")
+  defer f.Close()
+
+  // you can write usual and error log in different io.Writer
+  bv.LogOutput(f, os.Stderr)
+
+  // you can decide what level of logs should write, by default all
+  // there are five levels available: Fatal, Error, Warn, Info & Debug
+  bv.LogLevel(bv.Lerror | bv.Linfo)
+
+  bv.Info("Hello World!") // 2018/02/06 00:31:28 INFO : Hello World!
+  
+  // you can define your log tag style
+  t := bv.LTag{"| Fatal | ", "| Error | ", "| Warn | ", "| Info | ", "| Debug | "}
+
+  // you can chain functions in configuration
+  l := bv.NewLogger().Output(f, os.Stderr).Tags(t).Flags(log.Lshortfile)
+  l.Error("Hello again!!") // main.go:27: | Error | Hello again!!
 }
 ```

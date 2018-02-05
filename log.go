@@ -24,8 +24,14 @@ type LTag struct {
 	Fatal, Error, Warn, Info, Debug string
 }
 
-// DefaultLogTag is a LTag with default strings
-var DefaultLogTag = LTag{"FATAL: ", "ERROR: ", "WARN : ", "INFO : ", "DEBUG: "}
+var (
+
+	// DefaultLogTag is a LTag with default strings
+	DefaultLogTag = LTag{"FATAL: ", "ERROR: ", "WARN : ", "INFO : ", "DEBUG: "}
+
+	// BracketLogTag is a LTag with "[...]" style
+	BracketLogTag = LTag{"[FATAL] ", "[ERROR] ", "[WARN ] ", "[INFO ] ", "[DEBUG] "}
+)
 
 // Logger wraps two log.Loggers with different output deestination. One is standard
 // output when method Debug, Info or Warn is called; another is error output where
@@ -37,13 +43,18 @@ type Logger struct {
 	t     LTag
 }
 
+// write calls lgr.Output to print tag and v to output
+func (l *Logger) write(lgr *log.Logger, tag string, v ...interface{}) {
+	v = append([]interface{}{tag}, v...)
+	l.lock.Lock()
+	defer l.lock.Unlock()
+	lgr.Output(3, fmt.Sprint(v...))
+}
+
 // Fatal calls os.Exit(1) after writes given message to error output
 func (l *Logger) Fatal(v ...interface{}) {
 	if l.level&Lfatal != 0 {
-		v = append([]interface{}{l.t.Fatal}, v...)
-		l.lock.Lock()
-		l.e.Output(3, fmt.Sprint(v...))
-		l.lock.Unlock()
+		l.write(l.e, l.t.Fatal, v...)
 	}
 	os.Exit(1)
 }
@@ -51,44 +62,33 @@ func (l *Logger) Fatal(v ...interface{}) {
 // Error writes given message to error output
 func (l *Logger) Error(v ...interface{}) {
 	if l.level&Lerror != 0 {
-		v = append([]interface{}{l.t.Error}, v...)
-		l.lock.Lock()
-		defer l.lock.Unlock()
-		l.e.Output(3, fmt.Sprint(v...))
+		l.write(l.e, l.t.Error, v...)
 	}
 }
 
 // Warn writes given message to standard output
 func (l *Logger) Warn(v ...interface{}) {
 	if l.level&Lwarn != 0 {
-		v = append([]interface{}{l.t.Warn}, v...)
-		l.lock.Lock()
-		defer l.lock.Unlock()
-		l.o.Output(3, fmt.Sprint(v...))
+		l.write(l.o, l.t.Warn, v...)
 	}
 }
 
 // Info writes given message to standard output
 func (l *Logger) Info(v ...interface{}) {
 	if l.level&Linfo != 0 {
-		v = append([]interface{}{l.t.Info}, v...)
-		l.lock.Lock()
-		defer l.lock.Unlock()
-		l.o.Output(3, fmt.Sprint(v...))
+		l.write(l.o, l.t.Info, v...)
 	}
 }
 
 // Debug writes given message to standard output
 func (l *Logger) Debug(v ...interface{}) {
 	if l.level&Ldebug != 0 {
-		v = append([]interface{}{l.t.Debug}, v...)
-		l.lock.Lock()
-		defer l.lock.Unlock()
-		l.o.Output(3, fmt.Sprint(v...))
+		l.write(l.o, l.t.Debug, v...)
 	}
 }
 
-// Flags sets the output flags of the Logger
+// Flags sets the output flags of the Logger. The flag follows the standard
+// package "log"
 func (l *Logger) Flags(f int) *Logger {
 	l.o.SetFlags(f)
 	l.e.SetFlags(f)
@@ -133,56 +133,67 @@ func (l *Logger) Tags(t LTag) *Logger {
 	return l
 }
 
-var defaultLogger = NewLogger()
+var stdLgr = NewLogger()
 
 // Fatal calls default Logger.Fatal
 func Fatal(v ...interface{}) {
-	defaultLogger.Fatal(v...)
+	if stdLgr.level&Lfatal != 0 {
+		stdLgr.write(stdLgr.e, stdLgr.t.Fatal, v...)
+	}
+	os.Exit(1)
 }
 
 // Error calls default Logger.Error
 func Error(v ...interface{}) {
-	defaultLogger.Error(v...)
+	if stdLgr.level&Lerror != 0 {
+		stdLgr.write(stdLgr.e, stdLgr.t.Error, v...)
+	}
 }
 
 // Warn calls default Logger.Warn
 func Warn(v ...interface{}) {
-	defaultLogger.Warn(v...)
+	if stdLgr.level&Lwarn != 0 {
+		stdLgr.write(stdLgr.o, stdLgr.t.Warn, v...)
+	}
 }
 
 // Info calls default Logger.Info
 func Info(v ...interface{}) {
-	defaultLogger.Info(v...)
+	if stdLgr.level&Linfo != 0 {
+		stdLgr.write(stdLgr.o, stdLgr.t.Info, v...)
+	}
 }
 
 // Debug calls default Logger.Debug
 func Debug(v ...interface{}) {
-	defaultLogger.Debug(v...)
+	if stdLgr.level&Ldebug != 0 {
+		stdLgr.write(stdLgr.o, stdLgr.t.Debug, v...)
+	}
 }
 
-// LogFlags sets the
+// LogFlags sets the flags of default Logger
 func LogFlags(f int) *Logger {
-	return defaultLogger.Flags(f)
+	return stdLgr.Flags(f)
 }
 
 // LogLevel sets the level of default Logger
 func LogLevel(lv int) *Logger {
-	return defaultLogger.Level(lv)
+	return stdLgr.Level(lv)
 }
 
 // LogOutput sets the destination of standard and error outputs of default Logger
 func LogOutput(out, err io.Writer) *Logger {
-	return defaultLogger.Output(out, err)
+	return stdLgr.Output(out, err)
 }
 
 // LogPrefix sets prefix of default Logger
 func LogPrefix(p string) *Logger {
-	return defaultLogger.Prefix(p)
+	return stdLgr.Prefix(p)
 }
 
 // LogTags sets the tags of default Logger
 func LogTags(t LTag) *Logger {
-	return defaultLogger.Tags(t)
+	return stdLgr.Tags(t)
 }
 
 // NewLogger returns a new Logger
