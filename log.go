@@ -18,7 +18,8 @@ const (
 	Lall = Lfatal | Lerror | Lwarn | Linfo | Ldebug
 )
 
-// A LTag is a set of strings which identify the level of logs
+// A LTag is a set of strings which identify the severity level
+// of each log
 type LTag struct {
 	Fatal, Error, Warn, Info, Debug string
 }
@@ -26,28 +27,30 @@ type LTag struct {
 var (
 
 	// DefaultLogTag is a LTag with default strings
-	DefaultLogTag = LTag{"FATAL: ", "ERROR: ", "WARN : ", "INFO : ", "DEBUG: "}
+	DefaultLogTag = LTag{"FATAL:", "ERROR:", "WARN :", "INFO :", "DEBUG:"}
 
 	// BracketLogTag is a LTag with "[...]" style
-	BracketLogTag = LTag{"[FATAL] ", "[ERROR] ", "[WARN ] ", "[INFO ] ", "[DEBUG] "}
+	BracketLogTag = LTag{"[FATAL]", "[ERROR]", "[WARN ]", "[INFO ]", "[DEBUG]"}
 )
 
-// Logger wraps two log.Loggers with different output deestination. One is standard
-// output when method Debug, Info or Warn is called; another is error output where
-// Error or Fatal writes data.
+// A Logger wraps a pointer to log.Logger and additional fields.
+// It prints level tag and the log if severity level meets its
+// configuration.
 type Logger struct {
 	o  *log.Logger
 	lv int
 	t  LTag
 }
 
-// write calls lgr.Output to print tag and v to output
+// write calls l.o.Output to print tag and v to output
 func (l *Logger) write(tag string, v ...interface{}) {
-	v = append([]interface{}{tag}, v...)
-	l.o.Output(3, fmt.Sprint(v...))
+	if tag != "" {
+		v = append([]interface{}{tag}, v...)
+	}
+	l.o.Output(3, fmt.Sprintln(v...))
 }
 
-// Fatal calls os.Exit(1) after writes given message to error output
+// Fatal calls os.Exit(1) after writes fatal tag and v to output
 func (l *Logger) Fatal(v ...interface{}) {
 	if l.lv&Lfatal != 0 {
 		l.write(l.t.Fatal, v...)
@@ -55,50 +58,49 @@ func (l *Logger) Fatal(v ...interface{}) {
 	os.Exit(1)
 }
 
-// Error writes given message to error output
+// Error writes error tag and v to output
 func (l *Logger) Error(v ...interface{}) {
 	if l.lv&Lerror != 0 {
 		l.write(l.t.Error, v...)
 	}
 }
 
-// Warn writes given message to standard output
+// Warn writes warn tag and v to output
 func (l *Logger) Warn(v ...interface{}) {
 	if l.lv&Lwarn != 0 {
 		l.write(l.t.Warn, v...)
 	}
 }
 
-// Info writes given message to standard output
+// Info writes info tag and v to output
 func (l *Logger) Info(v ...interface{}) {
 	if l.lv&Linfo != 0 {
 		l.write(l.t.Info, v...)
 	}
 }
 
-// Debug writes given message to standard output
+// Debug writes debug tag and v to output
 func (l *Logger) Debug(v ...interface{}) {
 	if l.lv&Ldebug != 0 {
 		l.write(l.t.Debug, v...)
 	}
 }
 
-// Flags sets the output flags of the Logger. The flag follows the standard
-// package "log"
+// Flags sets the flags of the Logger. The flag follows the
+// standard package "log"
 func (l *Logger) Flags(f int) *Logger {
 	l.o.SetFlags(f)
 	return l
 }
 
-// Level sets the output level of the Logger
+// Level sets the level of the Logger
 func (l *Logger) Level(lv int) *Logger {
 	l.lv = lv
 	return l
 }
 
-// Output sets the destination of standard and error outputs of the Logger.
-// The out must not be nil. The destination of error output will be same as
-// standard output if eout is nil.
+// Output sets the output destination of the Logger. The out
+// must not be nil
 func (l *Logger) Output(out io.Writer) *Logger {
 	if out == nil {
 		panic("A nil pointer can not be used as output")
@@ -108,14 +110,14 @@ func (l *Logger) Output(out io.Writer) *Logger {
 	return l
 }
 
-// Prefix sets the prefix of standard and error outputs of the Logger
+// Prefix sets the prefix of of the Logger
 func (l *Logger) Prefix(p string) *Logger {
 	l.o.SetPrefix(p)
 	return l
 }
 
-// Tags sets the tags of the Logger. To omit the tag of logs, simply
-// use l.Tags(LTag{}).
+// Tags sets the tags of the Logger. To omit the tag of logs,
+// simply use l.Tags(LTag{})
 func (l *Logger) Tags(t LTag) *Logger {
 	l.t = t
 	return l
@@ -169,7 +171,7 @@ func LogLevel(lv int) *Logger {
 	return stdLgr.Level(lv)
 }
 
-// LogOutput sets the destination of standard and error outputs of default Logger
+// LogOutput sets the output destination of default Logger
 func LogOutput(out io.Writer) *Logger {
 	return stdLgr.Output(out)
 }
@@ -184,8 +186,8 @@ func LogTags(t LTag) *Logger {
 	return stdLgr.Tags(t)
 }
 
-// NewLogger returns a new Logger
-// By default, it logs at all level and the output destination is same as default Logger.
+// NewLogger returns a new Logger. By default, it logs at all
+// level and the output destination is standard output
 func NewLogger() *Logger {
 	return &Logger{
 		lv: Lall,

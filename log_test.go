@@ -237,7 +237,7 @@ func TestTags(t *testing.T) {
 		Info:  "[info ]",
 		Debug: "[debug]",
 	}
-	r, _ = regexp.Compile("^" + regDateTime + `\[[a-z ]{5}\]` + message + "\n$")
+	r, _ = regexp.Compile("^" + regDateTime + `\[[a-z ]{5}\] ` + message + "\n$")
 	l := NewLogger().Output(w).Level(Lwarn).Tags(tag)
 
 	l.Warn(message)
