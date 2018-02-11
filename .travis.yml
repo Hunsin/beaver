@@ -5,4 +5,4 @@ go:
   - 1.8.x
   - 1.9.x
 
-script: go test ./
+script: go test -cover ./

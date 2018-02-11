@@ -75,8 +75,8 @@ func main() {
   f, _ := os.Create("file_name.log")
   defer f.Close()
 
-  // you can write usual and error log in different io.Writer
-  bv.LogOutput(f, os.Stderr)
+  // setting the output destination
+  bv.LogOutput(f)
 
   // you can decide what level of logs should write, by default all
   // there are five levels available: Fatal, Error, Warn, Info & Debug
@@ -88,7 +88,7 @@ func main() {
   t := bv.LTag{"| Fatal | ", "| Error | ", "| Warn | ", "| Info | ", "| Debug | "}
 
   // you can chain functions in configuration
-  l := bv.NewLogger().Output(f, os.Stderr).Tags(t).Flags(log.Lshortfile)
+  l := bv.NewLogger().Output(f).Tags(t).Flags(log.Lshortfile)
   l.Error("Hello again!!") // main.go:27: | Error | Hello again!!
 }
 ```

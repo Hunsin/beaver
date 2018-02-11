@@ -18,67 +18,50 @@ const (
 var reg, _ = regexp.Compile("^" + regDateTime + regTag + message + "\n$")
 
 func TestOutput(t *testing.T) {
-	ow := new(bytes.Buffer)
-	ew := new(bytes.Buffer)
+	w := new(bytes.Buffer)
 
 	// test default Logger
-	LogOutput(ow, ew)
+	LogOutput(w)
 	Debug(message)
-	Error(message)
 
-	if !reg.Match(ow.Bytes()) {
-		t.Errorf("Standard output error at default Logger\nGot: %v", ow)
-	}
-	if !reg.Match(ew.Bytes()) {
-		t.Errorf("Error output error at default Logger\nGot: %v", ow)
+	if !reg.Match(w.Bytes()) {
+		t.Errorf("Standard output error at default Logger\nGot: %v", w)
 	}
 
-	ow.Reset()
-	ew.Reset()
+	w.Reset()
 
 	// test new Logger
-	l := NewLogger().Output(ow, ew)
+	l := NewLogger().Output(w)
 	l.Info(message)
-	l.Error(message)
 
-	if !reg.Match(ow.Bytes()) {
-		t.Errorf("Standard output error, got: %v", ow)
-	}
-	if !reg.Match(ew.Bytes()) {
-		t.Errorf("Error output error, got: %v", ow)
+	if !reg.Match(w.Bytes()) {
+		t.Errorf("Standard output error, got: %v", w)
 	}
 }
 
 func TestLevelNone(t *testing.T) {
-	ow := new(bytes.Buffer)
-	ew := new(bytes.Buffer)
+	w := new(bytes.Buffer)
 
 	// test default Logger
-	LogOutput(ow, ew)
+	LogOutput(w)
 	LogLevel(0)
 	Error(message)
 	Warn(message)
 	Info(message)
 	Debug(message)
-	if ew.Len() != 0 {
-		t.Errorf("Level 0 default Logger.Error failed. Error output: %v", ew)
-	}
-	if ow.Len() != 0 {
-		t.Errorf("Level 0 default Logger failed. Output: %v", ow)
+	if w.Len() != 0 {
+		t.Errorf("Level 0 default Logger failed. Output: %v", w)
 	}
 
 	// test new Logger
-	l := NewLogger().Output(ow, ew).Level(0)
+	l := NewLogger().Output(w).Level(0)
 
 	l.Error(message)
 	l.Warn(message)
 	l.Info(message)
 	l.Debug(message)
-	if ew.Len() != 0 {
-		t.Errorf("Level 0 new Logger.Error failed. Error output: %v", ew)
-	}
-	if ow.Len() != 0 {
-		t.Errorf("Level 0 new Logger failed. Output: %v", ow)
+	if w.Len() != 0 {
+		t.Errorf("Level 0 new Logger failed. Output: %v", w)
 	}
 }
 
@@ -95,11 +78,11 @@ func TestFatal(t *testing.T) {
 	case "default":
 
 		// the destination of standard and error output are same
-		LogOutput(f, nil)
+		LogOutput(f)
 		LogLevel(Lfatal)
 		Fatal(message)
 	case "new":
-		l := NewLogger().Level(Lfatal).Output(f, nil)
+		l := NewLogger().Level(Lfatal).Output(f)
 		l.Fatal(message)
 	default:
 
@@ -139,126 +122,93 @@ func TestFatal(t *testing.T) {
 }
 
 func TestError(t *testing.T) {
-	ow := new(bytes.Buffer)
-	ew := new(bytes.Buffer)
+	w := new(bytes.Buffer)
 
 	// test default Logger
-	LogOutput(ow, ew)
+	LogOutput(w)
 	LogLevel(Lerror)
 	Error(message)
 
-	if !reg.Match(ew.Bytes()) {
-		t.Errorf("Default Logger.Error failed. Got: %v", ew)
-	}
-	if ow.Len() != 0 {
-		t.Errorf("Default Logger.Error writes to standard output.\nGot: %v", ow)
+	if !reg.Match(w.Bytes()) {
+		t.Errorf("Default Logger.Error failed. Got: %v", w)
 	}
 
-	ow.Reset()
-	ew.Reset()
+	w.Reset()
 
 	// test new Logger
-	l := NewLogger().Output(ow, ew).Level(Lerror)
+	l := NewLogger().Output(w).Level(Lerror)
 	l.Error(message)
 
-	if !reg.Match(ew.Bytes()) {
-		t.Errorf("New Logger.Error failed. Got: %v", ew)
-	}
-	if ow.Len() != 0 {
-		t.Errorf("New Logger.Error writes to standard output.\nGot: %v", ow)
+	if !reg.Match(w.Bytes()) {
+		t.Errorf("New Logger.Error failed. Got: %v", w)
 	}
 }
 
 func TestWarn(t *testing.T) {
-	ow := new(bytes.Buffer)
-	ew := new(bytes.Buffer)
+	w := new(bytes.Buffer)
 
 	// test default Logger
-	LogOutput(ow, ew)
+	LogOutput(w)
 	LogLevel(Lwarn)
 	Warn(message)
 
-	if !reg.Match(ow.Bytes()) {
-		t.Errorf("Default Logger.Warn failed. Got: %v", ow)
+	if !reg.Match(w.Bytes()) {
+		t.Errorf("Default Logger.Warn failed. Got: %v", w)
 	}
-	if ew.Len() != 0 {
-		t.Errorf("Default Logger.Warn writes to error output.\nGot: %v", ew)
-	}
-
-	ow.Reset()
-	ew.Reset()
+	w.Reset()
 
 	// test new Logger
-	l := NewLogger().Output(ow, ew).Level(Lwarn)
+	l := NewLogger().Output(w).Level(Lwarn)
 	l.Warn(message)
 
-	if !reg.Match(ow.Bytes()) {
-		t.Errorf("New Logger.Warn failed. Got: %v", ow)
-	}
-	if ew.Len() != 0 {
-		t.Errorf("New Logger.Warn writes to error output.\nGot: %v", ew)
+	if !reg.Match(w.Bytes()) {
+		t.Errorf("New Logger.Warn failed. Got: %v", w)
 	}
 }
 
 func TestInfo(t *testing.T) {
-	ow := new(bytes.Buffer)
-	ew := new(bytes.Buffer)
+	w := new(bytes.Buffer)
 
 	// test default Logger
-	LogOutput(ow, ew)
+	LogOutput(w)
 	LogLevel(Linfo)
 	Info(message)
 
-	if !reg.Match(ow.Bytes()) {
-		t.Errorf("Default Logger.Info failed. Got: %v", ow)
-	}
-	if ew.Len() != 0 {
-		t.Errorf("Default Logger.Info writes to error output.\nGot: %v", ew)
+	if !reg.Match(w.Bytes()) {
+		t.Errorf("Default Logger.Info failed. Got: %v", w)
 	}
 
-	ow.Reset()
-	ew.Reset()
+	w.Reset()
 
 	// test new Logger
-	l := NewLogger().Output(ow, ew).Level(Linfo)
+	l := NewLogger().Output(w).Level(Linfo)
 	l.Info(message)
 
-	if !reg.Match(ow.Bytes()) {
-		t.Errorf("New Logger.Info failed. Got: %v", ow)
-	}
-	if ew.Len() != 0 {
-		t.Errorf("New Logger.Info writes to error output.\nGot: %v", ew)
+	if !reg.Match(w.Bytes()) {
+		t.Errorf("New Logger.Info failed. Got: %v", w)
 	}
 }
 
 func TestDebug(t *testing.T) {
-	ow := new(bytes.Buffer)
-	ew := new(bytes.Buffer)
+	w := new(bytes.Buffer)
 
 	// test default Logger
-	LogOutput(ow, ew)
+	LogOutput(w)
 	LogLevel(Ldebug)
 	Debug(message)
 
-	if !reg.Match(ow.Bytes()) {
-		t.Errorf("Default Logger.Error failed. Got: %v", ow)
-	}
-	if ew.Len() != 0 {
-		t.Errorf("Default Logger.Error writes to error output.\nGot: %v", ew)
+	if !reg.Match(w.Bytes()) {
+		t.Errorf("Default Logger.Error failed. Got: %v", w)
 	}
 
-	ow.Reset()
-	ew.Reset()
+	w.Reset()
 
 	// test new Logger
-	l := NewLogger().Output(ow, ew).Level(Ldebug)
+	l := NewLogger().Output(w).Level(Ldebug)
 	l.Debug(message)
 
-	if !reg.Match(ow.Bytes()) {
-		t.Errorf("New Logger.Error failed. Got: %v", ow)
-	}
-	if ew.Len() != 0 {
-		t.Errorf("New Logger.Error writes to error output.\nGot: %v", ew)
+	if !reg.Match(w.Bytes()) {
+		t.Errorf("New Logger.Error failed. Got: %v", w)
 	}
 }
 
@@ -267,7 +217,7 @@ func TestTags(t *testing.T) {
 	r, _ := regexp.Compile("^" + regDateTime + message + "\n$")
 
 	// test empty tag
-	LogOutput(w, nil)
+	LogOutput(w)
 	LogLevel(Lall)
 	LogTags(LTag{})
 	defer LogTags(DefaultLogTag)
@@ -288,7 +238,7 @@ func TestTags(t *testing.T) {
 		Debug: "[debug]",
 	}
 	r, _ = regexp.Compile("^" + regDateTime + `\[[a-z ]{5}\]` + message + "\n$")
-	l := NewLogger().Output(w, nil).Level(Lwarn).Tags(tag)
+	l := NewLogger().Output(w).Level(Lwarn).Tags(tag)
 
 	l.Warn(message)
 	if !r.Match(w.Bytes()) {
