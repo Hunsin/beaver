@@ -2,6 +2,7 @@ package beaver
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -263,7 +264,54 @@ func TestServe(t *testing.T) {
 
 	out, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		t.Error("Can not read response body")
+		t.Fatal("ioutil.ReadAll exits with error:", err)
+	}
+
+	want, _ := json.Marshal(&s)
+
+	if trimNewline(want) != trimNewline(out) {
+		t.Errorf("JSONPod.Serve failed\nWant: %s\nGot:  %s",
+			string(want), string(out))
+	}
+}
+
+func TestServeGzip(t *testing.T) {
+	s := sample{
+		Name: "Beaver",
+		Year: 2017,
+		Fast: true,
+	}
+
+	w := httptest.NewRecorder()
+	if err := JSON(&s).ServeGzip(w, http.StatusTeapot); err != nil {
+		t.Error("JSONPod.ServeGzip failed:", err)
+	}
+
+	res := w.Result()
+	defer res.Body.Close()
+	hdr := res.Header.Get("Content-Type")
+	if hdr != "application/json; charset=utf-8" {
+		t.Error("JSONPod.ServeGzip failed: Content-Type header wasn't set")
+	}
+
+	hdr = res.Header.Get("Content-Encoding")
+	if hdr != "gzip" {
+		t.Error("JSONPod.ServeGzip failed: Content-Encoding header wasn't set")
+	}
+
+	if res.StatusCode != http.StatusTeapot {
+		t.Error("JSONPod.ServeGzip failed: status code wasn't set")
+	}
+
+	r, err := gzip.NewReader(res.Body)
+	if err != nil {
+		t.Fatal("gzip.NewReader exits with error:", err)
+	}
+	defer r.Close()
+
+	out, err := ioutil.ReadAll(r)
+	if err != nil {
+		t.Fatal("ioutil.ReadAll exits with error:", err)
 	}
 
 	want, _ := json.Marshal(&s)

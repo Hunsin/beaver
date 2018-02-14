@@ -1,6 +1,7 @@
 package beaver
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"io"
@@ -141,6 +142,18 @@ func (j *JSONPod) Serve(w http.ResponseWriter, code int) error {
 	w.WriteHeader(code)
 
 	return j.Write(w)
+}
+
+// ServeGzip is equivalent to j.Serve() which response body is compressed
+// in gzip format.
+func (j *JSONPod) ServeGzip(w http.ResponseWriter, code int) error {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Encoding", "gzip")
+	w.WriteHeader(code)
+
+	gz := gzip.NewWriter(w)
+	defer gz.Close()
+	return j.Write(gz)
 }
 
 // Write marshals j.v and writes the result to w.
