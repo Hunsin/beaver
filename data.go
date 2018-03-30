@@ -42,7 +42,7 @@ func Download(h http.Header, url, path string) (int64, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode >= 300 {
-		return 0, errors.New("Server response with status: " + res.Status)
+		return 0, errors.New("beaver: Server response with status " + res.Status)
 	}
 
 	return WriteFile(path, res.Body)
