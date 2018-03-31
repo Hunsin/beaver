@@ -15,7 +15,7 @@ const (
 	message     = "Logging message"
 )
 
-var reg, _ = regexp.Compile("^" + regDateTime + regTag + message + "\n$")
+var reg = regexp.MustCompile("^" + regDateTime + regTag + message + "\n$")
 
 func TestOutput(t *testing.T) {
 	w := new(bytes.Buffer)
