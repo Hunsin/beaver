@@ -54,10 +54,10 @@ func testRequest(t *testing.T, method string, h http.Header, v interface{}) http
 
 			got, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				t.Errorf("Can not read request body: %v", err)
+				t.Error("ioutil.ReadAll exits with error:", err)
 			}
 			if string(got) != string(want) {
-				t.Errorf("Request Body not match.\nGot:  %s\nWant: %s", string(got), string(want))
+				t.Errorf("Request Body not match.\nGot:  %s\nWant: %s", got, want)
 			}
 		}
 
@@ -75,16 +75,16 @@ func testRequest(t *testing.T, method string, h http.Header, v interface{}) http
 func TestWriteFile(t *testing.T) {
 	buf := bytes.NewBuffer([]byte(str))
 	if _, err := WriteFile("tempfile", buf); err != nil {
-		t.Errorf("WriteFile exits with error: %v", err)
+		t.Fatal("WriteFile failed:", err)
 	}
 
 	f, err := ioutil.ReadFile("tempfile")
 	if err != nil {
-		t.Error("Can not open tempfile")
+		t.Fatal("ioutil.ReadFile exits with error:", err)
 	}
 
 	if string(f) != str {
-		t.Errorf("WriteFile failed\nGot:  %s\nWant: %s", string(f), str)
+		t.Errorf("WriteFile failed\nGot:  %s\nWant: %s", f, str)
 	}
 }
 
@@ -97,17 +97,17 @@ func TestDownload(t *testing.T) {
 
 	_, err := Download(nil, ts.URL, "tempfile")
 	if err != nil {
-		t.Errorf("Download failed with error: %v", err)
+		t.Fatal("Download failed:", err)
 	}
 	defer os.Remove("tempfile")
 
 	out, err := ioutil.ReadFile("tempfile")
 	if err != nil {
-		t.Errorf("Can not open tempfile: %v", err)
+		t.Fatal("ioutil.ReadFile exits with error:", err)
 	}
 
 	if string(out) != str {
-		t.Errorf("Download failed\nGot:  %s\nWant: %s", string(out), str)
+		t.Errorf("Download failed\nGot:  %s\nWant: %s", out, str)
 	}
 }
 
@@ -147,13 +147,13 @@ func TestOpenWriteFile(t *testing.T) {
 	}
 
 	if err := JSON(&s).WriteFile("temp.json"); err != nil {
-		t.Errorf("JSONPod.WriteFile exits with error: %v", err)
+		t.Fatal("JSONPod.WriteFile failed:", err)
 	}
 	defer os.Remove("temp.json")
 
 	out := sample{}
 	if err := JSON(&out).Open("temp.json"); err != nil {
-		t.Errorf("JSONPod.Open exits with error: %v", err)
+		t.Fatal("JSONPod.Open failed:", err)
 	}
 
 	if out.Name != s.Name || out.Year != s.Year || out.Fast != s.Fast {
@@ -175,13 +175,13 @@ func TestParse(t *testing.T) {
 
 	b, err := json.Marshal(&s)
 	if err != nil {
-		t.Errorf("Marshal struct exits with error: %v", err)
+		t.Fatal("json.Marshal exits with error:", err)
 	}
 
 	out := sample{}
 	err = JSON(&out).Parse(b)
 	if err != nil {
-		t.Errorf("JSONPod.Parse exits with error: %v", err)
+		t.Fatal("JSONPod.Parse failed:", err)
 	}
 
 	if out.Name != s.Name || out.Year != s.Year || out.Fast != s.Fast {
@@ -248,11 +248,12 @@ func TestServe(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	if err := JSON(&s).Serve(w, http.StatusTeapot); err != nil {
-		t.Errorf("JSONPod.Serve exits with error: %v", err)
+		t.Fatal("JSONPod.Serve failed:", err)
 	}
 
 	res := w.Result()
 	defer res.Body.Close()
+
 	ct := res.Header.Get("Content-Type")
 	if ct != "application/json; charset=utf-8" {
 		t.Error("JSONPod.Serve doesn't set Content-Type header")
@@ -270,8 +271,7 @@ func TestServe(t *testing.T) {
 	want, _ := json.Marshal(&s)
 
 	if trimNewline(want) != trimNewline(out) {
-		t.Errorf("JSONPod.Serve failed\nWant: %s\nGot:  %s",
-			string(want), string(out))
+		t.Errorf("JSONPod.Serve failed\nWant: %s\nGot:  %s", want, out)
 	}
 }
 
@@ -284,11 +284,12 @@ func TestServeGzip(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	if err := JSON(&s).ServeGzip(w, http.StatusTeapot); err != nil {
-		t.Error("JSONPod.ServeGzip failed:", err)
+		t.Fatal("JSONPod.ServeGzip failed:", err)
 	}
 
 	res := w.Result()
 	defer res.Body.Close()
+
 	hdr := res.Header.Get("Content-Type")
 	if hdr != "application/json; charset=utf-8" {
 		t.Error("JSONPod.ServeGzip failed: Content-Type header wasn't set")
@@ -317,8 +318,7 @@ func TestServeGzip(t *testing.T) {
 	want, _ := json.Marshal(&s)
 
 	if trimNewline(want) != trimNewline(out) {
-		t.Errorf("JSONPod.Serve failed\nWant: %s\nGot:  %s",
-			string(want), string(out))
+		t.Errorf("JSONPod.Serve failed\nWant: %s\nGot:  %s", want, out)
 	}
 }
 
@@ -331,12 +331,11 @@ func TestWrite(t *testing.T) {
 
 	var buf bytes.Buffer
 	if err := JSON(&s).Write(&buf); err != nil {
-		t.Errorf("JSONPod.Write exits with error: %v", err)
+		t.Fatal("JSONPod.Write failed:", err)
 	}
 
 	want, _ := json.Marshal(&s)
 	if trimNewline(buf.Bytes()) != trimNewline(want) {
-		t.Errorf("JSONPod.Write failed\nGot:  %v\n Want: %s",
-			buf, string(want))
+		t.Errorf("JSONPod.Write failed\nGot:  %v\n Want: %s", buf, want)
 	}
 }

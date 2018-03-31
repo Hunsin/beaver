@@ -101,7 +101,6 @@ func TestFatal(t *testing.T) {
 		if !reg.Match(buf) {
 			t.Errorf("Standard Logger.Fatal output not match. Got: %s", buf)
 		}
-		t.Log(string(buf))
 
 		// test new Logger
 		cmd = exec.Command(os.Args[0], "-test.run=TestFatal")
