@@ -13,7 +13,7 @@ import (
 )
 
 // regex of a log
-var reg = regexp.MustCompile(`^(\w+ )?\d{4}(-\d{2}){2}T\d{2}(:\d{2}){2}\.\d+\+\d{2}:\d{2} 1\.\d+ms \d{3}(\.\d+){3} \d{3} GET /\w* .*\n$`)
+var reg = regexp.MustCompile(`^(\w+ )?\d{4}(-\d{2}){2}T\d{2}(:\d{2}){2}\.\d+[Z+-](\d{2}:\d{2})? 1\.\d+ms \d{3}(\.\d+){3} \d{3} GET /\w* .*\n$`)
 
 func TestFile(t *testing.T) {
 	n := "temp.log"
