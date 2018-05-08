@@ -36,6 +36,12 @@ func (l *Logger) File(name string) *Logger {
 func (l *Logger) Output(w io.Writer) *Logger {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+
+	// close original file if it's present
+	if old, ok := l.out.(io.Closer); ok && old != os.Stdout {
+		old.Close()
+	}
+
 	l.out = w
 	return l
 }

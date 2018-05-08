@@ -29,7 +29,6 @@ func TestFile(t *testing.T) {
 	}
 
 	// test if logger appends data to existing file instead of erasing it
-	l.out.(*os.File).Close()
 	l.File(n)
 	fmt.Fprint(l.out, s)
 
