@@ -77,7 +77,7 @@ func TestListen(t *testing.T) {
 	b := bytes.Buffer{}
 	l := New(&b).Prefix("PreText")
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(time.Millisecond)
+		time.Sleep(time.Millisecond) // make sure the log time is in form of 1.xxxms
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})

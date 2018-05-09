@@ -3,9 +3,9 @@ package httplog
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
 )
@@ -76,10 +76,11 @@ func (l *Logger) Listen(h http.Handler) http.HandlerFunc {
 		h.ServeHTTP(rec, r)
 		dur := time.Since(now)
 
+		ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 		v := append(l.prefix,
 			now.Format(l.timefmt),
 			dur,
-			strings.Split(r.RemoteAddr, ":")[0],
+			ip,
 			rec.c,
 			r.Method,
 			r.URL.Path,
