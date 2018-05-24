@@ -49,10 +49,10 @@ func TestRecoder(t *testing.T) {
 	}
 
 	if w.Header().Get("Server") != "beaver" {
-		t.Error("Header failed: recorder")
+		t.Error("Header failed: recorder didn't write response header")
 	}
 
 	if w.Body.String() != "Hello world" {
-		t.Error("")
+		t.Error("Write failed: recoder didn't write response body")
 	}
 }

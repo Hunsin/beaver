@@ -13,7 +13,7 @@ import (
 )
 
 // regex of a log
-var reg = regexp.MustCompile(`^(\w+ )?\d{4}(-\d{2}){2}T\d{2}(:\d{2}){2}\.\d+[Z+-](\d{2}:\d{2})? 1\.\d+ms \d{3}(\.\d+){3} \d{3} GET /\w* .*\n$`)
+var reg = regexp.MustCompile(`^(\w+ )?\d{4}(-\d{2}){2}T\d{2}(:\d{2}){2}\.\d+[Z+-](\d{2}:\d{2})? [\d.]+(ms|µs|ns) \d{3}(\.\d+){3} \d{3} GET /\w* .*\n$`)
 
 func TestFile(t *testing.T) {
 	n := "temp.log"
@@ -86,11 +86,11 @@ func TestRecover(t *testing.T) {
 
 	c := http.StatusInternalServerError
 	if result.StatusCode != c {
-		t.Error("Recover failed: Default PanicHandler not set.")
+		t.Error("Recover failed: Default PanicHandler not set")
 	}
 
 	if len(b.String()) == 0 {
-		t.Error("Recover failed: log not generated.")
+		t.Error("Recover failed: log not generated")
 	}
 }
 
@@ -98,7 +98,6 @@ func TestListen(t *testing.T) {
 	b := bytes.Buffer{}
 	l := New(&b).Prefix("PreText")
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(time.Millisecond) // make sure the log time is in form of 1.xxxms
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
