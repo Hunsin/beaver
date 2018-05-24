@@ -68,8 +68,29 @@ func TestTimeFormat(t *testing.T) {
 	f := time.RFC1123Z
 	l := New(nil).TimeFormat(f)
 
-	if l.timefmt != time.RFC1123Z {
-		t.Errorf("TimeFormat failed. Got: %s, Want: %s", l.timefmt, time.RFC1123Z)
+	if l.timefmt != f {
+		t.Errorf("TimeFormat failed. Got: %s, Want: %s", l.timefmt, f)
+	}
+}
+
+func TestRecover(t *testing.T) {
+	b := bytes.Buffer{}
+	l := New(&b).Recover(nil)
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/path", nil)
+
+	l.Listen(willPanic).ServeHTTP(w, r)
+
+	result := w.Result()
+	defer result.Body.Close()
+
+	c := http.StatusInternalServerError
+	if result.StatusCode != c {
+		t.Error("Recover failed: Default PanicHandler not set.")
+	}
+
+	if len(b.String()) == 0 {
+		t.Error("Recover failed: log not generated.")
 	}
 }
 

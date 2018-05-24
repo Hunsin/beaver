@@ -17,6 +17,7 @@ type Logger struct {
 	timefmt string
 	prefix  []interface{}
 	out     io.Writer
+	ph      PanicHandler
 	mu      sync.Mutex
 }
 
@@ -67,9 +68,28 @@ func (l *Logger) TimeFormat(layout string) *Logger {
 	return l
 }
 
+// Recover sets the PanicHandler of l. If h is nil, a default handler
+// is applied. In other words, the handler of l can not be removed
+// once it is set.
+func (l *Logger) Recover(h PanicHandler) *Logger {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if h == nil {
+		h = panicHandler
+	}
+
+	l.ph = h
+	return l
+}
+
 // Listen is a http middleware that records the request event and
 // calls the given http.Handler.
 func (l *Logger) Listen(h http.Handler) http.HandlerFunc {
+	if l.ph != nil {
+		h = chainPanicHandler(h, l.ph)
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		now := time.Now()
 		rec := &recorder{w: w}
@@ -107,5 +127,5 @@ func New(w io.Writer) *Logger {
 	if w == nil {
 		w = os.Stdout
 	}
-	return &Logger{time.RFC3339Nano, []interface{}{}, w, sync.Mutex{}}
+	return &Logger{time.RFC3339Nano, []interface{}{}, w, nil, sync.Mutex{}}
 }
