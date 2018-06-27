@@ -92,7 +92,7 @@ func (l *Logger) Listen(h http.Handler) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		now := time.Now()
-		rec := &recorder{w: w}
+		rec := &recorder{w, 0}
 		h.ServeHTTP(rec, r)
 		dur := time.Since(now)
 

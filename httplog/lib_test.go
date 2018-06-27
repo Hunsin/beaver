@@ -41,7 +41,7 @@ func TestRecoder(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	r := &recorder{w: w}
+	r := &recorder{w, 0}
 	h(r, nil)
 
 	if r.c != http.StatusTeapot {
