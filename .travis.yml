@@ -7,5 +7,4 @@ go:
 - 1.10.x
 
 script:
-- go test -v -cover github.com/Hunsin/beaver
-- go test -v -cover github.com/Hunsin/beaver/httplog
+- go test -v -cover ./...
